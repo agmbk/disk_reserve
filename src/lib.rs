@@ -199,8 +199,8 @@ impl DiskManager {
 #[cfg(test)]
 mod test {
     use super::{DiskManager, DiskReserve, DiskState, GB};
-    use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use tokio::sync::watch;
 
     #[test]
@@ -212,13 +212,16 @@ mod test {
                 available: AtomicU64::new(100 * GB),
                 reserved: AtomicU64::new(0),
                 notify: tx,
-            })
+            }),
         };
 
         assert!(!disk_manager.try_reserve(100 * GB));
         assert!(disk_manager.try_reserve(50 * GB));
         assert_eq!(disk_manager.state.reserved.load(Ordering::Relaxed), 50 * GB);
-        assert_eq!(disk_manager.state.available.load(Ordering::Relaxed), 100 * GB);
+        assert_eq!(
+            disk_manager.state.available.load(Ordering::Relaxed),
+            100 * GB
+        );
     }
 
     #[tokio::test]
@@ -230,41 +233,48 @@ mod test {
                 available: AtomicU64::new(100 * GB),
                 reserved: AtomicU64::new(0),
                 notify: tx,
-            })
+            }),
         };
 
         assert!(!rx.has_changed().unwrap());
 
         let _reserve_10 = DiskReserve::reserve(&disk_manager, 10 * GB).await;
         assert_eq!(disk_manager.state.reserved.load(Ordering::Relaxed), 10 * GB);
-        assert_eq!(disk_manager.state.available.load(Ordering::Relaxed), 100 * GB);
-
+        assert_eq!(
+            disk_manager.state.available.load(Ordering::Relaxed),
+            100 * GB
+        );
         assert!(rx.has_changed().unwrap());
         rx.mark_unchanged();
 
         let _reserve_20 = DiskReserve::reserve(&disk_manager, 20 * GB).await;
         assert_eq!(disk_manager.state.reserved.load(Ordering::Relaxed), 30 * GB);
-        assert_eq!(disk_manager.state.available.load(Ordering::Relaxed), 100 * GB);
-
+        assert_eq!(
+            disk_manager.state.available.load(Ordering::Relaxed),
+            100 * GB
+        );
         assert!(rx.has_changed().unwrap());
         rx.mark_unchanged();
 
         assert!(!disk_manager.try_reserve(21 * GB));
-
         assert!(!rx.has_changed().unwrap());
 
         drop(_reserve_10);
         assert!(rx.has_changed().unwrap());
         rx.mark_unchanged();
-
         assert_eq!(disk_manager.state.reserved.load(Ordering::Relaxed), 20 * GB);
-        assert_eq!(disk_manager.state.available.load(Ordering::Relaxed), 100 * GB);
+        assert_eq!(
+            disk_manager.state.available.load(Ordering::Relaxed),
+            100 * GB
+        );
 
         drop(_reserve_20);
         assert!(rx.has_changed().unwrap());
         rx.mark_unchanged();
-
         assert_eq!(disk_manager.state.reserved.load(Ordering::Relaxed), 0);
-        assert_eq!(disk_manager.state.available.load(Ordering::Relaxed), 100 * GB);
+        assert_eq!(
+            disk_manager.state.available.load(Ordering::Relaxed),
+            100 * GB
+        );
     }
 }
