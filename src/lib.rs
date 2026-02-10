@@ -164,7 +164,7 @@ impl DiskManager {
                             disk.refresh_specifics(refresh_kind);
                         }
                         None => {
-                            disks.refresh_specifics(true, refresh_kind);
+                            disks.refresh_specifics(false, refresh_kind);
                             for (i, disk) in disks.list().iter().enumerate() {
                                 if let Ok(meta) = std::fs::metadata(disk.mount_point()) {
                                     #[cfg(unix)]
@@ -199,8 +199,8 @@ impl DiskManager {
 #[cfg(test)]
 mod test {
     use super::{DiskManager, DiskReserve, DiskState, GB};
-    use std::sync::Arc;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Arc;
     use tokio::sync::watch;
 
     #[test]
