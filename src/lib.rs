@@ -49,8 +49,6 @@ impl DiskReserve {
     }
 
     async fn reserve(disk_manager: &DiskManager, amount: u64) -> io::Result<Self> {
-        disk_manager.init().await?;
-
         let mut rx = disk_manager.state.notify.subscribe();
 
         loop {
